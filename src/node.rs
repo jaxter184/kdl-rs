@@ -305,7 +305,7 @@ impl KdlNode {
                 if let Some(existing) = self.entry_mut(key) {
                     std::mem::swap(existing, &mut entry);
                     Some(entry)
-                } else {
+               } else {
                     self.entries.push(entry);
                     None
                 }
@@ -364,15 +364,15 @@ impl KdlNode {
                 }
                 None
             }
-            NodeKey::Index(idx_arg) => {
+            NodeKey::Index(idx) => {
                 let mut current_idx = 0;
-                for (idx, entry) in self.entries.iter_mut().enumerate() {
+                for (idx_entry, entry) in self.entries.iter_mut().enumerate() {
                     if entry.name.is_none() {
-                        if current_idx == idx_arg {
-                            return Some(self.entries.remove(idx));
+                        if current_idx == idx {
+                            return Some(self.entries.remove(idx_entry));
                         }
                         current_idx += 1;
-                        if current_idx > idx_arg {
+                        if current_idx > idx {
                             return None;
                         }
                     }
