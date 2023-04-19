@@ -326,7 +326,7 @@ impl KdlNode {
                                 return Some(entry);
                             }
                             current_idx += 1;
-                            if current_idx >= idx {
+                            if current_idx > idx {
                                 break;
                             }
                         }
@@ -364,15 +364,15 @@ impl KdlNode {
                 }
                 None
             }
-            NodeKey::Index(idx) => {
+            NodeKey::Index(idx_arg) => {
                 let mut current_idx = 0;
-                for entry in &mut self.entries {
+                for (idx, entry) in self.entries.iter_mut().enumerate() {
                     if entry.name.is_none() {
-                        if current_idx == idx {
+                        if current_idx == idx_arg {
                             return Some(self.entries.remove(idx));
                         }
                         current_idx += 1;
-                        if current_idx >= idx {
+                        if current_idx > idx_arg {
                             return None;
                         }
                     }
@@ -679,5 +679,42 @@ mod test {
         node.entries_mut().push(KdlEntry::new_prop("x", 1));
         node.entries_mut().push(KdlEntry::new_prop("x", 2));
         assert_eq!(&node["x"], &2.into())
+    }
+
+    #[test]
+    fn insertion() {
+        let mut node = KdlNode::new("foo");
+        node.push("pos0");
+        node.insert("keyword", 6.0);
+        node.push("pos1");
+        assert_eq!(node.entries().len(), 3);
+
+        node.insert(0, "inserted0");
+        node.insert(1, "inserted1");
+        assert_eq!(node.entries().len(), 3);
+        assert_eq!(node[0], "inserted0".into());
+        assert_eq!(node[1], "inserted1".into());
+    }
+
+    #[test]
+    fn removal() {
+        let mut node = KdlNode::new("foo");
+        node.push("pos0");
+        node.insert("keyword", 6.0);
+        node.push("pos1");
+        assert_eq!(node.entries().len(), 3);
+
+        node.remove(1);
+        assert_eq!(node.entries().len(), 2, "index removal should succeed");
+        assert!(node.get("keyword").is_some(), "keyword property should not be removed by index removal");
+        node.remove(1);
+        assert_eq!(node.entries().len(), 2, "index removal should not succeed");
+        node.remove("not an existing keyword");
+        assert_eq!(node.entries().len(), 2, "key removal should not succeed");
+        node.remove("keyword");
+        assert_eq!(node.entries().len(), 1, "key removal should succeed");
+        node.remove(0);
+        assert_eq!(node.entries().len(), 0, "index removal should suceed");
+        node.remove(0); // should not panic
     }
 }
