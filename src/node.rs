@@ -227,9 +227,6 @@ impl KdlNode {
                             return Some(entry);
                         }
                         current_idx += 1;
-                        if current_idx > idx + 1 {
-                            return None;
-                        }
                     }
                 }
                 None
@@ -266,13 +263,10 @@ impl KdlNode {
                 let mut current_idx = 0;
                 for entry in &mut self.entries {
                     if entry.name.is_none() {
-                        if current_idx >= idx {
+                        if current_idx == idx {
                             return Some(entry);
                         }
                         current_idx += 1;
-                        if current_idx >= idx {
-                            return None;
-                        }
                     }
                 }
                 None
@@ -326,9 +320,6 @@ impl KdlNode {
                                 return Some(entry);
                             }
                             current_idx += 1;
-                            if current_idx > idx {
-                                break;
-                            }
                         }
                     }
                     if idx > current_idx {
@@ -372,9 +363,6 @@ impl KdlNode {
                             return Some(self.entries.remove(idx_entry));
                         }
                         current_idx += 1;
-                        if current_idx > idx {
-                            return None;
-                        }
                     }
                 }
                 None
