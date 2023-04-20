@@ -299,7 +299,7 @@ impl KdlNode {
                 if let Some(existing) = self.entry_mut(key) {
                     std::mem::swap(existing, &mut entry);
                     Some(entry)
-               } else {
+                } else {
                     self.entries.push(entry);
                     None
                 }
@@ -694,7 +694,10 @@ mod test {
 
         node.remove(1);
         assert_eq!(node.entries().len(), 2, "index removal should succeed");
-        assert!(node.get("keyword").is_some(), "keyword property should not be removed by index removal");
+        assert!(
+            node.get("keyword").is_some(),
+            "keyword property should not be removed by index removal"
+        );
         node.remove(1);
         assert_eq!(node.entries().len(), 2, "index removal should not succeed");
         node.remove("not an existing keyword");
