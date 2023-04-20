@@ -209,27 +209,17 @@ impl KdlNode {
     fn entry_impl(&self, key: NodeKey) -> Option<&KdlEntry> {
         match key {
             NodeKey::Key(key) => {
-                let mut current = None;
-                for entry in &self.entries {
-                    if entry.name.is_some()
-                        && entry.name.as_ref().map(|i| i.value()) == Some(key.value())
-                    {
-                        current = Some(entry);
-                    }
-                }
-                current
+                self.entries().iter()
+                    .fold(None, |acc, entry| {
+                       (entry.name.as_ref().map(|inner| inner.value()) == Some(key.value()))
+	                       .then_some(entry)
+	                       .or(acc)
+                    })
             }
             NodeKey::Index(idx) => {
-                let mut current_idx = 0;
-                for entry in &self.entries {
-                    if entry.name.is_none() {
-                        if current_idx == idx {
-                            return Some(entry);
-                        }
-                        current_idx += 1;
-                    }
-                }
-                None
+                self.entries().iter()
+                    .filter_map(|entry| entry.name.is_none().then_some(entry))
+                    .nth(idx)
             }
         }
     }
@@ -249,27 +239,20 @@ impl KdlNode {
     fn entry_mut_impl(&mut self, key: NodeKey) -> Option<&mut KdlEntry> {
         match key {
             NodeKey::Key(key) => {
-                let mut current = None;
-                for entry in &mut self.entries {
-                    if entry.name.is_some()
-                        && entry.name.as_ref().map(|i| i.value()) == Some(key.value())
-                    {
-                        current = Some(entry);
-                    }
-                }
-                current
+                self.entries_mut().iter_mut()
+                    .fold(None, |acc, entry| {
+                       if entry.name.as_ref().map(|inner| inner.value()) == Some(key.value()) {
+                          Some(entry)
+                       }
+                       else {
+                          acc
+                       }
+                    })
             }
             NodeKey::Index(idx) => {
-                let mut current_idx = 0;
-                for entry in &mut self.entries {
-                    if entry.name.is_none() {
-                        if current_idx == idx {
-                            return Some(entry);
-                        }
-                        current_idx += 1;
-                    }
-                }
-                None
+                self.entries_mut().iter_mut()
+                    .filter_map(|entry| entry.name.is_none().then_some(entry))
+                    .nth(idx)
             }
         }
     }
@@ -299,7 +282,7 @@ impl KdlNode {
                 if let Some(existing) = self.entry_mut(key) {
                     std::mem::swap(existing, &mut entry);
                     Some(entry)
-               } else {
+                } else {
                     self.entries.push(entry);
                     None
                 }
@@ -311,26 +294,14 @@ impl KdlNode {
                 if let Some(existing) = self.entry_mut(key) {
                     std::mem::swap(existing, &mut entry);
                     Some(entry)
+                } else if idx > self.entries.len() {
+                    panic!(
+                        "Insertion index (is {}) should be <= len (is {})",
+                        idx, self.entries.len()
+                    );
                 } else {
-                    let mut current_idx = 0;
-                    for existing in &mut self.entries {
-                        if existing.name.is_none() {
-                            if current_idx == idx {
-                                std::mem::swap(existing, &mut entry);
-                                return Some(entry);
-                            }
-                            current_idx += 1;
-                        }
-                    }
-                    if idx > current_idx {
-                        panic!(
-                            "Insertion index (is {}) should be <= len (is {})",
-                            idx, current_idx
-                        );
-                    } else {
-                        self.entries.push(entry);
-                        None
-                    }
+                    self.entries.push(entry);
+                    None
                 }
             }
         }
@@ -348,26 +319,16 @@ impl KdlNode {
     fn remove_impl(&mut self, key: NodeKey) -> Option<KdlEntry> {
         match key {
             NodeKey::Key(key) => {
-                for (idx, entry) in self.entries.iter_mut().enumerate() {
-                    if entry.name.is_some() && entry.name.as_ref() == Some(&key) {
-                        return Some(self.entries.remove(idx));
-                    }
-                }
-                None
+                self.entries().iter()
+                    .position(|entry| entry.name.as_ref() == Some(&key))
             }
             NodeKey::Index(idx) => {
-                let mut current_idx = 0;
-                for (idx_entry, entry) in self.entries.iter_mut().enumerate() {
-                    if entry.name.is_none() {
-                        if current_idx == idx {
-                            return Some(self.entries.remove(idx_entry));
-                        }
-                        current_idx += 1;
-                    }
-                }
-                None
+                self.entries().iter()
+                    .enumerate()
+                    .filter_map(|(idx, entry)| entry.name.is_none().then_some(idx))
+                    .nth(idx)
             }
-        }
+        }.map(|idx| self.entries.remove(idx))
     }
 
     /// Shorthand for `self.entries_mut().push(entry)`.
