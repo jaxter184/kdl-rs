@@ -348,7 +348,7 @@ impl KdlNode {
     fn remove_impl(&mut self, key: NodeKey) -> Option<KdlEntry> {
         match key {
             NodeKey::Key(key) => {
-                for (idx, entry) in self.entries.iter_mut().enumerate() {
+                for (idx, entry) in self.entries.iter().enumerate() {
                     if entry.name.is_some() && entry.name.as_ref() == Some(&key) {
                         return Some(self.entries.remove(idx));
                     }
@@ -357,7 +357,7 @@ impl KdlNode {
             }
             NodeKey::Index(idx) => {
                 let mut current_idx = 0;
-                for (idx_entry, entry) in self.entries.iter_mut().enumerate() {
+                for (idx_entry, entry) in self.entries.iter().enumerate() {
                     if entry.name.is_none() {
                         if current_idx == idx {
                             return Some(self.entries.remove(idx_entry));
